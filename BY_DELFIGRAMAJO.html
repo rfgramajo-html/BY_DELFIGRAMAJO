@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BY DELFI GRAMAJO</title>
+<meta name="theme-color" content="#b5776b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Delfi Gramajo">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fbf6f3; color: #3d2f2a; min-height: 100vh; }
+  header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06); position: sticky; top: 0; z-index: 10; }
+  header h1 { font-family: Georgia, serif; font-size: 22px; color: #b5776b; font-weight: normal; }
+  .menu-btn { background: none; border: none; font-size: 26px; cursor: pointer; color: #8a6258; padding: 4px 12px; border-radius: 8px; }
+  .menu-btn:hover { background: #f3e6e1; }
+  .side { position: fixed; top: 0; right: -270px; width: 260px; height: 100%; background: #fff; box-shadow: -4px 0 16px rgba(0,0,0,.1); transition: right .3s; z-index: 20; padding: 70px 14px 20px; }
+  .side.open { right: 0; }
+  .side button { display: block; width: 100%; text-align: left; background: none; border: none; padding: 12px 14px; font-size: 16px; border-radius: 10px; cursor: pointer; color: #3d2f2a; margin-bottom: 4px; }
+  .side button:hover { background: #f7e9e4; }
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.2); display: none; z-index: 15; }
+  .overlay.show { display: block; }
+  main { padding: 24px; max-width: 1100px; margin: auto; }
+  .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+  .photo { position: relative; height: 220px; border-radius: 18px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  .photo img { width: 100%; height: 100%; object-fit: cover; }
+  .photo .cap { position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 14px; background: linear-gradient(transparent, rgba(0,0,0,.45)); color: #fff; font-size: 14px; }
+  .photo { cursor: pointer; transition: transform .18s ease; }
+  .photo:hover { transform: translateY(-2px); }
+  .photo input[type=file] { display: none; }
+  .home-brand { text-align:center; padding: 30px 12px 26px; }
+  .home-logo-hit { display:inline-flex; align-items:center; justify-content:center; width:132px; height:132px; border-radius:50%; overflow:hidden; cursor:pointer; background:#f3e6e1; border:1px solid #e8d5ce; }
+  .home-logo-hit img { width:100%; height:100%; object-fit:cover; }
+  .home-logo-placeholder { font-family:Georgia,serif; color:#b5776b; font-size:38px; }
+  .home-brand h2 { margin:18px 0 0; font-size:30px; letter-spacing:2px; color:#8a6258; }
+  #homeLogoInput { display:none; }
+  .photo .cap { display:none; }
+  @media (max-width:600px) { .home-brand h2 { font-size:24px; } .home-logo-hit { width:112px; height:112px; } }
+  h2 { font-family: Georgia, serif; color: #b5776b; font-weight: normal; margin-bottom: 12px; }
+  .card { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,.05); margin-bottom: 18px; }
+  input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #e3d0c9; border-radius: 10px; font: inherit; background: #fffdfc; color: #3d2f2a; }
+  textarea { resize: vertical; min-height: 60px; }
+  .btn { background: #b5776b; color: #fff; border: none; padding: 10px 16px; border-radius: 10px; cursor: pointer; font: inherit; }
+  .btn:hover { background: #9c6055; }
+  .btn.light { background: #f3e6e1; color: #7a4e44; }
+  .btn.danger { background: #d9a0a0; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  label { font-size: 13px; color: #8a6258; display: block; margin-bottom: 4px; }
+  .results { margin-top: 10px; }
+  .results div { padding: 10px 12px; border-radius: 10px; cursor: pointer; background: #fdf4f1; margin-bottom: 6px; }
+  .results div:hover { background: #f5e2dc; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 800px; }
+  th { background: #f3e6e1; color: #7a4e44; font-weight: 600; padding: 10px; border: 1px solid #e6d3cc; font-size: 14px; }
+  td { border: 1px solid #e6d3cc; vertical-align: top; padding: 4px; }
+  td textarea { border: none; min-height: 110px; background: transparent; padding: 6px; }
+  td input[type=date] { border: none; background: transparent; padding: 6px; }
+  .hidden { display: none !important; }
+  .muted { color: #9a8680; font-size: 14px; }
+  .back { margin-bottom: 14px; }
+  .client-head { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+  .client-head > div { flex: 1; min-width: 160px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .logo-hdr { height: 40px; width: 40px; object-fit: cover; border-radius: 50%; }
+  .soon { padding: 30px; text-align: center; color: #9a8680; }
+  .money-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:18px; }
+  .money-stat { background:#fff; border:1px solid #eee1dc; border-radius:14px; padding:16px; }
+  .money-stat span { display:block; color:#8a6258; font-size:12px; margin-bottom:6px; }
+  .money-stat strong { font-family:Georgia,serif; font-size:22px; font-weight:normal; }
+  .movement { display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; padding:12px 0; border-bottom:1px solid #eee1dc; }
+  .movement:last-child { border-bottom:0; }
+  .positive { color:#56836a; } .negative { color:#b5776b; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><img id="logoHdr" alt="" class="logo-hdr" style="display:none"><h1>BY DELFI GRAMAJO</h1></div>
+  <button class="menu-btn" id="menuBtn" aria-label="Menú">⋮</button>
+</header>
+
+<div class="overlay" id="overlay"></div>
+<nav class="side" id="side">
+  <button data-go="inicio">🏠 Inicio</button>
+  <button data-go="clientas">👩 Clientas</button>
+  <button data-go="tratamientos">💆 Tratamientos</button>
+  <button data-go="inventario">📦 Inventario</button>
+  <button data-go="citas">📅 Citas</button>
+  <button data-go="finanzas">💰 Finanzas</button>
+</nav>
+
+<main>
+  <!-- INICIO -->
+  <section id="v-inicio">
+    <div class="home-brand">
+      <label class="home-logo-hit" for="homeLogoInput" title="Cambiar logo">
+        <img id="homeLogo" alt="Logo BY DELFI GRAMAJO" style="display:none">
+        <span id="homeLogoPlaceholder" class="home-logo-placeholder">DG</span>
+      </label>
+      <input type="file" id="homeLogoInput" accept="image/*">
+      <h2>BY DELFI GRAMAJO</h2>
+    </div>
+    <div class="gallery" id="gallery"></div>
+  </section>
+
+  <!-- BUSCADOR DE CLIENTAS -->
+  <section id="v-clientas" class="hidden">
+    <h2>Buscar clienta</h2>
+    <div class="card">
+      <div class="row">
+        <input id="search" placeholder="Escribe el nombre o apellido de la clienta..." style="flex:1">
+        <button class="btn" id="newClientBtn">+ Nueva clienta</button>
+      </div>
+      <div class="results" id="results"></div>
+    </div>
+  </section>
+
+  <!-- FICHA DE UNA CLIENTA -->
+  <section id="v-ficha" class="hidden">
+    <div class="back"><button class="btn light" data-go="clientas">← Volver a clientas</button></div>
+    <div class="card">
+      <div class="client-head">
+        <div><label>NOMBRE:</label><input id="cNombre"></div>
+        <div><label>APELLIDO:</label><input id="cApellido"></div>
+        <div><label>TIPO DE PIEL:</label><input id="cPiel" placeholder="Seca, grasa, mixta, sensible..."></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="saveClient">Guardar datos</button>
+        <button class="btn danger" id="deleteClient">Eliminar clienta</button>
+        <span class="muted" id="saveMsg"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between; margin-bottom:10px">
+        <h2 style="margin:0">Registro de visitas</h2>
+        <button class="btn" id="addRow">+ Agregar visita</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:130px">FECHA</th>
+              <th>HISTORIAL DE LA PIEL</th>
+              <th>NOTAS</th>
+              <th>HISTORIAL DEL TRATAMIENTO</th>
+              <th style="width:50px"></th>
+            </tr>
+          </thead>
+          <tbody id="visitBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRATAMIENTOS -->
+  <section id="v-tratamientos" class="hidden">
+    <h2>Tratamientos</h2>
+    <p class="muted" style="margin-bottom:14px">Cargá los servicios que ofrecés y consultá sus precios y duración.</p>
+    <div class="card">
+      <h2 id="tFormTitle">Nuevo tratamiento</h2>
+      <div class="grid3">
+        <div><label>NOMBRE DEL TRATAMIENTO *</label><input id="tNombre" placeholder="Ej. Limpieza facial profunda"></div>
+        <div><label>PRECIO</label><input id="tPrecio" type="number" min="0" step="0.01" placeholder="Ej. 25000"></div>
+        <div><label>DURACIÓN (MINUTOS)</label><input id="tDuracion" type="number" min="0" step="5" placeholder="Ej. 60"></div>
+      </div>
+      <div style="margin-top:12px"><label>DESCRIPCIÓN / QUÉ INCLUYE</label><textarea id="tDescripcion" placeholder="Detalles del tratamiento..."></textarea></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="saveTreatment">Guardar tratamiento</button>
+        <button class="btn light hidden" id="cancelTreatment">Cancelar edición</button>
+        <span class="muted" id="tMsg"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Mis tratamientos</h2><span class="muted" id="tCount"></span></div>
+      <div id="treatmentList" class="results"></div>
+    </div>
+  </section>
+
+  <!-- INVENTARIO -->
+  <section id="v-inventario" class="hidden">
+    <h2>Inventario</h2>
+    <p class="muted" style="margin-bottom:14px">Registrá tus productos, cantidades disponibles y stock mínimo.</p>
+    <div class="card">
+      <h2 id="iFormTitle">Nuevo producto</h2>
+      <div class="grid3">
+        <div><label>NOMBRE DEL PRODUCTO *</label><input id="iNombre" placeholder="Ej. Gel de limpieza"></div>
+        <div><label>CATEGORÍA</label><input id="iCategoria" placeholder="Ej. Limpieza, hidratación"></div>
+        <div><label>CANTIDAD ACTUAL</label><input id="iCantidad" type="number" min="0" step="1" placeholder="Ej. 5"></div>
+        <div><label>UNIDAD</label><input id="iUnidad" placeholder="Ej. unidades, ml, gr"></div>
+        <div><label>STOCK MÍNIMO</label><input id="iMinimo" type="number" min="0" step="1" placeholder="Ej. 2"></div>
+        <div><label>PRECIO DE COMPRA</label><input id="iCosto" type="number" min="0" step="0.01" placeholder="Opcional"></div>
+      </div>
+      <div class="grid3" style="margin-top:12px">
+        <div><label>PROVEEDOR</label><input id="iProveedor" placeholder="Nombre del proveedor"></div>
+        <div><label>FECHA DE VENCIMIENTO</label><input id="iVencimiento" type="date"></div>
+      </div>
+      <div style="margin-top:12px"><label>NOTAS</label><textarea id="iNotas" placeholder="Detalles, lote u otra información..."></textarea></div>
+      <div class="row" style="margin-top:12px">
+        <button class="btn" id="saveInventory">Guardar producto</button>
+        <button class="btn light hidden" id="cancelInventory">Cancelar edición</button>
+        <span class="muted" id="iMsg"></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 style="margin:0">Productos cargados</h2><span class="muted" id="iCount"></span></div>
+      <div id="inventoryList" class="results"></div>
+    </div>
+  </section>
+
+  <section id="v-citas" class="hidden">
+    <h2>Citas</h2>
+    <p class="muted" style="margin-bottom:14px">Cargá y organizá manualmente los turnos de tus clientas. Más adelante vemos cómo conectarlo con Calendico.</p>
+    <div class="card">
+      <h2 id="appointmentFormTitle">Nueva cita</h2>
+      <div class="grid3">
+        <div><label>FECHA *</label><input id="aFecha" type="date"></div>
+        <div><label>HORA *</label><input id="aHora" type="time"></div>
+        <div><label>NOMBRE DE LA CLIENTA *</label><input id="aClienta" list="clientNames" placeholder="Nombre y apellido"><datalist id="clientNames"></datalist></div>
+        <div><label>TRATAMIENTO</label><input id="aTratamiento" list="treatmentNames" placeholder="Tratamiento"><datalist id="treatmentNames"></datalist></div>
+        <div><label>ESTADO</label><select id="aEstado"><option>Reservada</option><option>Confirmada</option><option>Realizada</option><option>Cancelada</option><option>Ausente</option></select></div>
+        <div><label>SEÑA / IMPORTE ($)</label><input id="aImporte" type="number" min="0" step="0.01" placeholder="Opcional"></div>
+      </div>
+      <div style="margin-top:12px"><label>NOTAS</label><textarea id="aNotas" placeholder="Detalles del turno..."></textarea></div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="saveAppointment">Guardar cita</button><button class="btn light hidden" id="cancelAppointment">Cancelar edición</button><span class="muted" id="aMsg"></span></div>
+    </div>
+    <div class="card">
+      <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Agenda</h2><input id="appointmentFilter" type="date" style="max-width:190px"></div>
+      <div id="appointmentList" style="margin-top:12px"></div>
+    </div>
+  </section>
+  <section id="v-finanzas" class="hidden">
+    <h2>Finanzas</h2>
+    <div class="money-stats">
+      <div class="money-stat"><span>INGRESOS</span><strong class="positive" id="totalIncome">$ 0</strong></div>
+      <div class="money-stat"><span>GASTOS</span><strong class="negative" id="totalExpense">$ 0</strong></div>
+      <div class="money-stat"><span>BALANCE</span><strong id="totalBalance">$ 0</strong></div>
+    </div>
+    <div class="card">
+      <h2 id="financeFormTitle">Registrar movimiento</h2>
+      <div class="grid3">
+        <div><label>TIPO *</label><select id="fTipo"><option value="ingreso">Ingreso</option><option value="gasto">Gasto</option></select></div>
+        <div><label>FECHA *</label><input id="fFecha" type="date"></div>
+        <div><label>IMPORTE ($) *</label><input id="fImporte" type="number" min="0" step="0.01" placeholder="Ej. 25000"></div>
+        <div><label>CONCEPTO *</label><input id="fConcepto" placeholder="Ej. Limpieza facial / Compra de productos"></div>
+        <div><label>CATEGORÍA</label><input id="fCategoria" placeholder="Ej. Tratamiento, productos, servicios"></div>
+        <div><label>MEDIO DE PAGO</label><select id="fMedio"><option value="">Seleccionar</option><option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option><option>Otro</option></select></div>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="btn" id="saveMovement">Guardar movimiento</button><button class="btn light hidden" id="cancelMovement">Cancelar edición</button><span class="muted" id="fMsg"></span></div>
+    </div>
+    <div class="card"><div class="row" style="justify-content:space-between"><h2 style="margin:0">Movimientos</h2><span class="muted" id="fCount"></span></div><div id="financeList"></div></div>
+  </section>
+</main>
+
+<script>
+  const KEY = "centroBelleza_v1";
+  let db = JSON.parse(localStorage.getItem(KEY) || '{"clientas":[],"fotos":{}}');
+  // Agrega las nuevas listas sin borrar los datos que ya existían.
+  db.clientas = db.clientas || [];
+  db.fotos = db.fotos || {};
+  db.tratamientos = db.tratamientos || [];
+  db.inventario = db.inventario || [];
+  db.movimientos = db.movimientos || [];
+  db.citas = db.citas || [];
+  let current = null;
+  let editingTreatmentId = null;
+  let editingInventoryId = null;
+  let editingMovementId = null;
+
+  function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+
+  // ---------- Navegación ----------
+  const side = document.getElementById("side");
+  const overlay = document.getElementById("overlay");
+  function toggleMenu(force) {
+    const open = force !== undefined ? force : !side.classList.contains("open");
+    side.classList.toggle("open", open);
+    overlay.classList.toggle("show", open);
+  }
+  document.getElementById("menuBtn").onclick = () => toggleMenu();
+  overlay.onclick = () => toggleMenu(false);
+
+  function go(view) {
+    document.querySelectorAll("main > section").forEach(s => s.classList.add("hidden"));
+    const id = view === "ficha" ? "v-ficha" : "v-" + view;
+    document.getElementById(id).classList.remove("hidden");
+    toggleMenu(false);
+    if (view === "clientas") { document.getElementById("search").value = ""; renderResults(); }
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+
+  // ---------- Galería de inicio ----------
+  const defaultPhotos = [
+    { cap: "Skin care aesthetic", bg: "linear-gradient(135deg,#f9d9cf,#f3b9a8)" },
+    { cap: "Rutina de cuidado", bg: "linear-gradient(135deg,#e8f1ea,#b9d8c0)" },
+    { cap: "Salón de belleza", bg: "linear-gradient(135deg,#f5e9f5,#d9bfe0)" },
+    { cap: "Cremas y botánicos", bg: "linear-gradient(135deg,#fdf3dc,#f0d7a0)" }
+  ];
+  function renderGallery() {
+    const g = document.getElementById("gallery");
+    g.innerHTML = "";
+    defaultPhotos.forEach((p, i) => {
+      const div = document.createElement("label");
+      div.className = "photo";
+      div.style.background = p.bg;
+      const src = db.fotos[i];
+      if (src) {
+        const img = document.createElement("img");
+        img.src = src;
+        img.alt = "Foto de BY DELFI GRAMAJO";
+        div.appendChild(img);
+      }
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = () => {
+        const f = input.files && input.files[0];
+        if (!f) return;
+        const r = new FileReader();
+        r.onload = e => { db.fotos[i] = e.target.result; save(); renderGallery(); };
+        r.readAsDataURL(f);
+      };
+      div.appendChild(input);
+      g.appendChild(div);
+    });
+  }
+
+  // ---------- Clientas ----------
+  const search = document.getElementById("search");
+  search.oninput = renderResults;
+
+  function renderResults() {
+    const q = search.value.trim().toLowerCase();
+    const box = document.getElementById("results");
+    const list = db.clientas.filter(c => (c.nombre + " " + c.apellido).toLowerCase().includes(q));
+    if (!list.length) { box.innerHTML = `<p class="muted">${q ? "No se encontró esa clienta." : "Aún no tienes clientas. Crea una con “+ Nueva clienta”."}</p>`; return; }
+    box.innerHTML = "";
+    list.forEach(c => {
+      const d = document.createElement("div");
+      d.innerHTML = `<strong>${c.nombre} ${c.apellido}</strong> <span class="muted">· ${c.piel || "sin tipo de piel"}</span>`;
+      d.onclick = () => openClient(c.id);
+      box.appendChild(d);
+    });
+  }
+
+  document.getElementById("newClientBtn").onclick = () => {
+    const c = { id: Date.now().toString(), nombre: "", apellido: "", piel: "", visitas: [] };
+    db.clientas.push(c); save();
+    openClient(c.id);
+  };
+
+  function openClient(id) {
+    current = db.clientas.find(c => c.id === id);
+    if (!current) return;
+    document.getElementById("cNombre").value = current.nombre;
+    document.getElementById("cApellido").value = current.apellido;
+    document.getElementById("cPiel").value = current.piel;
+    document.getElementById("saveMsg").textContent = "";
+    renderVisits();
+    go("ficha");
+  }
+
+  document.getElementById("saveClient").onclick = () => {
+    current.nombre = document.getElementById("cNombre").value.trim();
+    current.apellido = document.getElementById("cApellido").value.trim();
+    current.piel = document.getElementById("cPiel").value.trim();
+    save();
+    document.getElementById("saveMsg").textContent = "✓ Guardado";
+  };
+
+  document.getElementById("deleteClient").onclick = () => {
+    if (!confirm("¿Eliminar esta clienta y todo su historial?")) return;
+    db.clientas = db.clientas.filter(c => c.id !== current.id);
+    save(); go("clientas");
+  };
+
+  // ---------- Tratamientos ----------
+  const treatmentFields = ["tNombre", "tPrecio", "tDuracion", "tDescripcion"];
+  function clearTreatmentForm() {
+    treatmentFields.forEach(id => document.getElementById(id).value = "");
+    editingTreatmentId = null;
+    document.getElementById("tFormTitle").textContent = "Nuevo tratamiento";
+    document.getElementById("saveTreatment").textContent = "Guardar tratamiento";
+    document.getElementById("cancelTreatment").classList.add("hidden");
+    document.getElementById("tMsg").textContent = "";
+  }
+  function renderTreatments() {
+    const box = document.getElementById("treatmentList");
+    box.innerHTML = "";
+    document.getElementById("tCount").textContent = db.tratamientos.length + " cargados";
+    if (!db.tratamientos.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Todavía no cargaste tratamientos.";
+      box.appendChild(empty);
+      return;
+    }
+    db.tratamientos.forEach(t => {
+      const card = document.createElement("div");
+      card.className = "card";
+      const title = document.createElement("strong");
+      title.textContent = t.nombre || "Tratamiento sin nombre";
+      const details = document.createElement("p");
+      details.className = "muted";
+      details.style.margin = "6px 0 10px";
+      details.textContent = [
+        t.precio ? "Precio: $" + Number(t.precio).toLocaleString("es-AR") : "Precio sin definir",
+        t.duracion ? "Duración: " + t.duracion + " min" : "",
+        t.descripcion || ""
+      ].filter(Boolean).join(" · ");
+      const actions = document.createElement("div");
+      actions.className = "row";
+      const edit = document.createElement("button");
+      edit.className = "btn light"; edit.textContent = "Editar";
+      edit.onclick = () => {
+        editingTreatmentId = t.id;
+        document.getElementById("tNombre").value = t.nombre || "";
+        document.getElementById("tPrecio").value = t.precio || "";
+        document.getElementById("tDuracion").value = t.duracion || "";
+        document.getElementById("tDescripcion").value = t.descripcion || "";
+        document.getElementById("tFormTitle").textContent = "Editar tratamiento";
+        document.getElementById("saveTreatment").textContent = "Guardar cambios";
+        document.getElementById("cancelTreatment").classList.remove("hidden");
+        window.scrollTo(0, 0);
+      };
+      const del = document.createElement("button");
+      del.className = "btn danger"; del.textContent = "Eliminar";
+      del.onclick = () => {
+        if (!confirm("¿Eliminar este tratamiento?")) return;
+        db.tratamientos = db.tratamientos.filter(x => x.id !== t.id);
+        save(); renderTreatments();
+      };
+      actions.append(edit, del);
+      card.append(title, details, actions);
+      box.appendChild(card);
+    });
+  }
+  document.getElementById("saveTreatment").onclick = () => {
+    const nombre = document.getElementById("tNombre").value.trim();
+    if (!nombre) { alert("Escribí el nombre del tratamiento."); return; }
+    const item = {
+      id: editingTreatmentId || Date.now().toString(),
+      nombre,
+      precio: document.getElementById("tPrecio").value,
+      duracion: document.getElementById("tDuracion").value,
+      descripcion: document.getElementById("tDescripcion").value.trim()
+    };
+    if (editingTreatmentId) {
+      const index = db.tratamientos.findIndex(x => x.id === editingTreatmentId);
+      if (index >= 0) db.tratamientos[index] = item;
+    } else db.tratamientos.push(item);
+    save(); clearTreatmentForm(); renderTreatments();
+    document.getElementById("tMsg").textContent = "✓ Guardado";
+  };
+  document.getElementById("cancelTreatment").onclick = clearTreatmentForm;
+
+  // ---------- Inventario ----------
+  const inventoryFields = ["iNombre", "iCategoria", "iCantidad", "iUnidad", "iMinimo", "iCosto", "iProveedor", "iVencimiento", "iNotas"];
+  function clearInventoryForm() {
+    inventoryFields.forEach(id => document.getElementById(id).value = "");
+    editingInventoryId = null;
+    document.getElementById("iFormTitle").textContent = "Nuevo producto";
+    document.getElementById("saveInventory").textContent = "Guardar producto";
+    document.getElementById("cancelInventory").classList.add("hidden");
+    document.getElementById("iMsg").textContent = "";
+  }
+  function renderInventory() {
+    const box = document.getElementById("inventoryList");
+    box.innerHTML = "";
+    document.getElementById("iCount").textContent = db.inventario.length + " productos";
+    if (!db.inventario.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Todavía no cargaste productos.";
+      box.appendChild(empty);
+      return;
+    }
+    db.inventario.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "card";
+      const title = document.createElement("strong");
+      title.textContent = item.nombre || "Producto sin nombre";
+      const details = document.createElement("p");
+      details.className = "muted";
+      details.style.margin = "6px 0 10px";
+      const qty = Number(item.cantidad || 0);
+      const min = Number(item.minimo || 0);
+      const stockText = "Stock: " + qty + (item.unidad ? " " + item.unidad : "");
+      details.textContent = [
+        item.categoria || "",
+        stockText,
+        item.minimo !== "" && qty <= min ? "⚠ Stock bajo (mínimo: " + min + ")" : "",
+        item.costo ? "Compra: $" + Number(item.costo).toLocaleString("es-AR") : "",
+        item.proveedor ? "Proveedor: " + item.proveedor : "",
+        item.vencimiento ? "Vence: " + item.vencimiento : "",
+        item.notas || ""
+      ].filter(Boolean).join(" · ");
+      const actions = document.createElement("div");
+      actions.className = "row";
+      const edit = document.createElement("button");
+      edit.className = "btn light"; edit.textContent = "Editar";
+      edit.onclick = () => {
+        editingInventoryId = item.id;
+        const values = {
+          iNombre:item.nombre, iCategoria:item.categoria, iCantidad:item.cantidad,
+          iUnidad:item.unidad, iMinimo:item.minimo, iCosto:item.costo,
+          iProveedor:item.proveedor, iVencimiento:item.vencimiento, iNotas:item.notas
+        };
+        Object.entries(values).forEach(([id, value]) => document.getElementById(id).value = value || "");
+        document.getElementById("iFormTitle").textContent = "Editar producto";
+        document.getElementById("saveInventory").textContent = "Guardar cambios";
+        document.getElementById("cancelInventory").classList.remove("hidden");
+        window.scrollTo(0, 0);
+      };
+      const del = document.createElement("button");
+      del.className = "btn danger"; del.textContent = "Eliminar";
+      del.onclick = () => {
+        if (!confirm("¿Eliminar este producto del inventario?")) return;
+        db.inventario = db.inventario.filter(x => x.id !== item.id);
+        save(); renderInventory();
+      };
+      actions.append(edit, del);
+      card.append(title, details, actions);
+      box.appendChild(card);
+    });
+  }
+  document.getElementById("saveInventory").onclick = () => {
+    const nombre = document.getElementById("iNombre").value.trim();
+    if (!nombre) { alert("Escribí el nombre del producto."); return; }
+    const item = {
+      id: editingInventoryId || Date.now().toString(),
+      nombre,
+      categoria: document.getElementById("iCategoria").value.trim(),
+      cantidad: document.getElementById("iCantidad").value,
+      unidad: document.getElementById("iUnidad").value.trim(),
+      minimo: document.getElementById("iMinimo").value,
+      costo: document.getElementById("iCosto").value,
+      proveedor: document.getElementById("iProveedor").value.trim(),
+      vencimiento: document.getElementById("iVencimiento").value,
+      notas: document.getElementById("iNotas").value.trim()
+    };
+    if (editingInventoryId) {
+      const index = db.inventario.findIndex(x => x.id === editingInventoryId);
+      if (index >= 0) db.inventario[index] = item;
+    } else db.inventario.push(item);
+    save(); clearInventoryForm(); renderInventory();
+    document.getElementById("iMsg").textContent = "✓ Guardado";
+  };
+  document.getElementById("cancelInventory").onclick = clearInventoryForm;
+
+
+  // ---------- Finanzas ----------
+  const money = n => "$ " + Number(n || 0).toLocaleString("es-AR", {minimumFractionDigits: 0, maximumFractionDigits: 2});
+  function clearMovementForm() {
+    ["fTipo", "fFecha", "fImporte", "fConcepto", "fCategoria", "fMedio"].forEach(id => {
+      const el = document.getElementById(id); el.value = id === "fTipo" ? "ingreso" : "";
+    });
+    editingMovementId = null;
+    document.getElementById("fFecha").value = today();
+    document.getElementById("financeFormTitle").textContent = "Registrar movimiento";
+    document.getElementById("saveMovement").textContent = "Guardar movimiento";
+    document.getElementById("cancelMovement").classList.add("hidden");
+    document.getElementById("fMsg").textContent = "";
+  }
+  function renderFinance() {
+    const income = db.movimientos.filter(x => x.tipo === "ingreso").reduce((a,x) => a + Number(x.importe || 0), 0);
+    const expense = db.movimientos.filter(x => x.tipo === "gasto").reduce((a,x) => a + Number(x.importe || 0), 0);
+    document.getElementById("totalIncome").textContent = money(income);
+    document.getElementById("totalExpense").textContent = money(expense);
+    document.getElementById("totalBalance").textContent = money(income-expense);
+    const box = document.getElementById("financeList"); box.innerHTML = "";
+    document.getElementById("fCount").textContent = db.movimientos.length + " movimientos";
+    if (!db.movimientos.length) { const p=document.createElement("p"); p.className="muted"; p.style.marginTop="12px"; p.textContent="Todavía no cargaste ingresos ni gastos."; box.appendChild(p); return; }
+    [...db.movimientos].sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).forEach(m => {
+      const row=document.createElement("div"); row.className="movement";
+      const info=document.createElement("div");
+      const name=document.createElement("strong"); name.textContent=m.concepto || "Movimiento";
+      const meta=document.createElement("p"); meta.className="muted"; meta.style.marginTop="4px";
+      meta.textContent=[m.fecha,m.tipo === "ingreso" ? "Ingreso" : "Gasto",m.categoria,m.medio].filter(Boolean).join(" · ");
+      info.append(name,meta);
+      const right=document.createElement("div"); right.className="row";
+      const amount=document.createElement("strong"); amount.className=m.tipo === "ingreso" ? "positive" : "negative"; amount.textContent=(m.tipo === "ingreso" ? "+ " : "− ")+money(m.importe);
+      const edit=document.createElement("button"); edit.className="btn light"; edit.textContent="Editar"; edit.onclick=()=>{
+        editingMovementId=m.id;
+        document.getElementById("fTipo").value=m.tipo; document.getElementById("fFecha").value=m.fecha||"";
+        document.getElementById("fImporte").value=m.importe||""; document.getElementById("fConcepto").value=m.concepto||"";
+        document.getElementById("fCategoria").value=m.categoria||""; document.getElementById("fMedio").value=m.medio||"";
+        document.getElementById("financeFormTitle").textContent="Editar movimiento"; document.getElementById("saveMovement").textContent="Guardar cambios";
+        document.getElementById("cancelMovement").classList.remove("hidden"); window.scrollTo(0,0);
+      };
+      const del=document.createElement("button"); del.className="btn danger"; del.textContent="Eliminar"; del.onclick=()=>{
+        if(!confirm("¿Eliminar este movimiento?")) return; db.movimientos=db.movimientos.filter(x=>x.id!==m.id); save(); renderFinance();
+      };
+      right.append(amount,edit,del); row.append(info,right); box.appendChild(row);
+    });
+  }
+  document.getElementById("saveMovement").onclick=()=>{
+    const importe=Number(document.getElementById("fImporte").value);
+    const concepto=document.getElementById("fConcepto").value.trim();
+    if(!concepto || !document.getElementById("fFecha").value || !(importe>0)) { alert("Completá fecha, concepto e importe mayor a cero."); return; }
+    const item={id:editingMovementId||Date.now().toString(),tipo:document.getElementById("fTipo").value,fecha:document.getElementById("fFecha").value,importe,concepto,categoria:document.getElementById("fCategoria").value.trim(),medio:document.getElementById("fMedio").value};
+    if(editingMovementId){const i=db.movimientos.findIndex(x=>x.id===editingMovementId);if(i>=0)db.movimientos[i]=item;} else db.movimientos.push(item);
+    save(); clearMovementForm(); renderFinance(); document.getElementById("fMsg").textContent="✓ Guardado";
+  };
+  document.getElementById("cancelMovement").onclick=clearMovementForm;
+
+  // ---------- Citas manuales ----------
+  let editingAppointmentId = null;
+  function refreshAppointmentOptions() {
+    const clients = document.getElementById("clientNames");
+    const treatments = document.getElementById("treatmentNames");
+    clients.innerHTML = ""; treatments.innerHTML = "";
+    db.clientas.forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = [c.nombre, c.apellido].filter(Boolean).join(" "); clients.appendChild(opt);
+    });
+    db.tratamientos.forEach(t => {
+      const opt = document.createElement("option"); opt.value = t.nombre; treatments.appendChild(opt);
+    });
+  }
+  function clearAppointmentForm() {
+    ["aFecha","aHora","aClienta","aTratamiento","aImporte","aNotas"].forEach(id => document.getElementById(id).value = "");
+    document.getElementById("aEstado").value = "Reservada";
+    document.getElementById("aFecha").value = today();
+    editingAppointmentId = null;
+    document.getElementById("appointmentFormTitle").textContent = "Nueva cita";
+    document.getElementById("saveAppointment").textContent = "Guardar cita";
+    document.getElementById("cancelAppointment").classList.add("hidden");
+    document.getElementById("aMsg").textContent = "";
+  }
+  function renderAppointments() {
+    refreshAppointmentOptions();
+    const box = document.getElementById("appointmentList"); box.innerHTML = "";
+    const filter = document.getElementById("appointmentFilter").value;
+    const items = [...db.citas].filter(c => !filter || c.fecha === filter).sort((a,b) => ((a.fecha||"")+ (a.hora||"")).localeCompare((b.fecha||"")+(b.hora||"")));
+    if (!items.length) {
+      const p = document.createElement("p"); p.className = "muted"; p.textContent = filter ? "No hay citas para esa fecha." : "Todavía no cargaste citas."; box.appendChild(p); return;
+    }
+    items.forEach(c => {
+      const row = document.createElement("div"); row.className = "movement";
+      const info = document.createElement("div");
+      const title = document.createElement("strong"); title.textContent = (c.hora || "Sin hora") + " · " + (c.clienta || "Clienta sin nombre");
+      const meta = document.createElement("p"); meta.className = "muted"; meta.style.marginTop = "4px";
+      meta.textContent = [c.fecha,c.tratamiento,c.estado,c.importe ? "Importe: " + money(c.importe) : "",c.notas].filter(Boolean).join(" · ");
+      info.append(title,meta);
+      const actions = document.createElement("div"); actions.className = "row";
+      const edit = document.createElement("button"); edit.className = "btn light"; edit.textContent = "Editar";
+      edit.onclick = () => {
+        editingAppointmentId = c.id;
+        document.getElementById("aFecha").value=c.fecha||""; document.getElementById("aHora").value=c.hora||"";
+        document.getElementById("aClienta").value=c.clienta||""; document.getElementById("aTratamiento").value=c.tratamiento||"";
+        document.getElementById("aEstado").value=c.estado||"Reservada"; document.getElementById("aImporte").value=c.importe||"";
+        document.getElementById("aNotas").value=c.notas||"";
+        document.getElementById("appointmentFormTitle").textContent="Editar cita"; document.getElementById("saveAppointment").textContent="Guardar cambios";
+        document.getElementById("cancelAppointment").classList.remove("hidden"); window.scrollTo(0,0);
+      };
+      const del = document.createElement("button"); del.className="btn danger"; del.textContent="Eliminar";
+      del.onclick=()=>{ if(!confirm("¿Eliminar esta cita?")) return; db.citas=db.citas.filter(x=>x.id!==c.id); save(); renderAppointments(); };
+      actions.append(edit,del); row.append(info,actions); box.appendChild(row);
+    });
+  }
+  document.getElementById("saveAppointment").onclick = () => {
+    const fecha=document.getElementById("aFecha").value, hora=document.getElementById("aHora").value, clienta=document.getElementById("aClienta").value.trim();
+    if(!fecha || !hora || !clienta){ alert("Completá fecha, hora y nombre de la clienta."); return; }
+    const item={id:editingAppointmentId||Date.now().toString(),fecha,hora,clienta,tratamiento:document.getElementById("aTratamiento").value.trim(),estado:document.getElementById("aEstado").value,importe:document.getElementById("aImporte").value,notas:document.getElementById("aNotas").value.trim()};
+    if(editingAppointmentId){const i=db.citas.findIndex(x=>x.id===editingAppointmentId);if(i>=0)db.citas[i]=item;} else db.citas.push(item);
+    save(); clearAppointmentForm(); renderAppointments(); document.getElementById("aMsg").textContent="✓ Guardada";
+  };
+  document.getElementById("cancelAppointment").onclick=clearAppointmentForm;
+  document.getElementById("appointmentFilter").onchange=renderAppointments;
+
+  // ---------- Visitas (filas) ----------
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  function renderVisits() {
+    const body = document.getElementById("visitBody");
+    body.innerHTML = "";
+    if (!current.visitas.length) addVisitRow(false);
+    current.visitas.forEach((v, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><input type="date" value="${v.fecha || ""}" data-k="fecha"></td>
+        <td><textarea data-k="piel">${v.piel || ""}</textarea></td>
+        <td><textarea data-k="notas">${v.notas || ""}</textarea></td>
+        <td><textarea data-k="tratamiento">${v.tratamiento || ""}</textarea></td>
+        <td><button class="btn danger" title="Eliminar fila">✕</button></td>`;
+      tr.querySelectorAll("[data-k]").forEach(el => {
+        el.oninput = () => { current.visitas[idx][el.dataset.k] = el.value; save(); };
+        el.onchange = el.oninput;
+      });
+      tr.querySelector("button").onclick = () => {
+        if (!confirm("¿Eliminar esta visita?")) return;
+        current.visitas.splice(idx, 1); save(); renderVisits();
+      };
+      body.appendChild(tr);
+    });
+  }
+
+  function addVisitRow(rerender = true) {
+    current.visitas.push({ fecha: today(), piel: "", notas: "", tratamiento: "" });
+    save();
+    if (rerender) renderVisits(); else renderVisits();
+  }
+  document.getElementById("addRow").onclick = () => addVisitRow(true);
+
+  function renderLogo() {
+    const img = document.getElementById("logoHdr");
+    const homeImg = document.getElementById("homeLogo");
+    const placeholder = document.getElementById("homeLogoPlaceholder");
+    img.style.display = homeImg.style.display = db.logo ? "" : "none";
+    placeholder.style.display = db.logo ? "none" : "";
+    if (db.logo) { img.src = db.logo; homeImg.src = db.logo; }
+    updateManifest();
+  }
+
+  function updateManifest() {
+    const icon = db.logo || "";
+    const m = {
+      name: "BY DELFI GRAMAJO", short_name: "Delfi Gramajo", start_url: ".", display: "standalone",
+      background_color: "#fbf6f3", theme_color: "#b5776b",
+      icons: icon ? [{ src: icon, sizes: "512x512" }] : []
+    };
+    const blob = new Blob([JSON.stringify(m)], { type: "application/json" });
+    let link = document.querySelector('link[rel="manifest"]');
+    if (!link) { link = document.createElement("link"); link.rel = "manifest"; document.head.appendChild(link); }
+    link.href = URL.createObjectURL(blob);
+    let apple = document.querySelector('link[rel="apple-touch-icon"]');
+    if (icon) {
+      if (!apple) { apple = document.createElement("link"); apple.rel = "apple-touch-icon"; document.head.appendChild(apple); }
+      apple.href = icon;
+    }
+  }
+
+  document.getElementById("homeLogoInput").onchange = function () {
+    const f = this.files && this.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = e => { db.logo = e.target.result; save(); renderLogo(); this.value = ""; };
+    r.readAsDataURL(f);
+  };
+
+  renderLogo();
+  renderGallery();
+  renderResults();
+  renderTreatments();
+  renderInventory();
+  clearAppointmentForm();
+  renderAppointments();
+  clearMovementForm();
+  renderFinance();
+</script>
+</body>
+</html>
