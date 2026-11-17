@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Delfi Gramajo">
 <style>
+  body.locked header, body.locked nav, body.locked main, body.locked .overlay {display:none !important;}
+  #loginScreen{display:none;max-width:390px;margin:12vh auto;padding:28px;background:#fff;border-radius:18px;box-shadow:0 4px 20px #0001;} body.locked #loginScreen{display:block;} #loginScreen input{margin:8px 0 14px;} #loginMsg{margin-top:12px;color:#9c6055;}
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Segoe UI", Roboto, Arial, sans-serif; background: #fbf6f3; color: #3d2f2a; min-height: 100vh; }
   header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.06); position: sticky; top: 0; z-index: 10; }
@@ -73,11 +76,12 @@
   .positive { color:#56836a; } .negative { color:#b5776b; }
 </style>
 </head>
-<body>
+<body class="locked">
+<div id="loginScreen"><h2>BY DELFI GRAMAJO</h2><p style="margin-bottom:18px;color:#8a6258">Ingresá para acceder a tus turnos y datos.</p><form id="loginForm"><label>Correo electrónico</label><input id="loginEmail" type="email" autocomplete="username" required><label>Contraseña</label><input id="loginPassword" type="password" autocomplete="current-password" required><button class="btn" type="submit" style="width:100%">Ingresar</button></form><p id="loginMsg"></p></div>
 
 <header>
   <div class="brand"><img id="logoHdr" alt="" class="logo-hdr" style="display:none"><h1>BY DELFI GRAMAJO</h1></div>
-  <button class="menu-btn" id="menuBtn" aria-label="Menú">⋮</button>
+  <div class="row"><span id="syncStatus" class="muted"></span><button class="menu-btn" id="menuBtn" aria-label="Menú">⋮</button></div>
 </header>
 
 <div class="overlay" id="overlay"></div>
@@ -88,6 +92,7 @@
   <button data-go="inventario">📦 Inventario</button>
   <button data-go="citas">📅 Citas</button>
   <button data-go="finanzas">💰 Finanzas</button>
+  <button id="logoutBtn">↪ Cerrar sesión</button>
 </nav>
 
 <main>
@@ -213,7 +218,7 @@
     <h2>Citas</h2>
     <p class="muted" style="margin-bottom:14px">Cargá y organizá manualmente los turnos de tus clientas. Más adelante vemos cómo conectarlo con Calendico.</p>
     <div class="card">
-      <h2 id="appointmentFormTitle">Nueva cita</h2>
+           <h2 id="appointmentFormTitle">Nueva cita</h2>
       <div class="grid3">
         <div><label>FECHA *</label><input id="aFecha" type="date"></div>
         <div><label>HORA *</label><input id="aHora" type="time"></div>
@@ -253,7 +258,41 @@
   </section>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  const SUPABASE_URL = "https://edhsqsbginbmvetzapew.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_EpX-Hp-yNCvEInKMOHLrKA_06pyNQD4";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUser = null;
+  let saveTimer = null;
+  let saveQueue = Promise.resolve();
+  const imageUrls = {};
+  async function uploadImage(file, kind) {
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+    const path = `${currentUser.id}/${kind}-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+    const {error} = await supabaseClient.storage.from('app-images').upload(path,file,{upsert:false,contentType:file.type || 'image/jpeg'});
+    if(error) throw error;
+    const {data,error:signError} = await supabaseClient.storage.from('app-images').createSignedUrl(path,604800);
+    if(signError) throw signError;
+    imageUrls[path]=data.signedUrl;
+    return path;
+  }
+  async function imageSource(value) {
+    if(!value) return '';
+    if(value.startsWith('data:') || value.startsWith('http')) return value;
+    if(imageUrls[value]) return imageUrls[value];
+    const {data,error}=await supabaseClient.storage.from('app-images').createSignedUrl(value,604800);
+    if(error){console.error(error);return '';}
+    imageUrls[value]=data.signedUrl; return data.signedUrl;
+  }
+  async function migrateOldImages() {
+    let changed=false;
+    const entries=Object.entries(db.fotos||{});
+    for(const [k,v] of entries){ if(typeof v==='string' && v.startsWith('data:')) { const blob=await (await fetch(v)).blob(); db.fotos[k]=await uploadImage(new File([blob],`foto-${k}.jpg`,{type:blob.type||'image/jpeg'}),'galeria'); changed=true; } }
+    if(typeof db.logo==='string' && db.logo.startsWith('data:')) { const blob=await (await fetch(db.logo)).blob(); db.logo=await uploadImage(new File([blob],'logo.jpg',{type:blob.type||'image/jpeg'}),'logo'); changed=true; }
+    if(changed) await persistNow();
+  }
+
   const KEY = "centroBelleza_v1";
   let db = JSON.parse(localStorage.getItem(KEY) || '{"clientas":[],"fotos":{}}');
   // Agrega las nuevas listas sin borrar los datos que ya existían.
@@ -268,7 +307,42 @@
   let editingInventoryId = null;
   let editingMovementId = null;
 
-  function save() { localStorage.setItem(KEY, JSON.stringify(db)); }
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify(db));
+    if(!currentUser) return;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>{ saveQueue=saveQueue.then(persistNow).catch(err=>{console.error(err);setSyncStatus('Error al sincronizar');}); },500);
+  }
+  function setSyncStatus(msg){ const el=document.getElementById('syncStatus'); if(el) el.textContent=msg; }
+  async function persistNow(){
+    if(!currentUser) return;
+    setSyncStatus('Guardando…');
+    const snapshot=JSON.parse(JSON.stringify(db));
+    const {error}=await supabaseClient.from('app_data').upsert({user_id:currentUser.id,data:snapshot,updated_at:new Date().toISOString()},{onConflict:'user_id'});
+    if(error) throw error;
+    localStorage.setItem(KEY,JSON.stringify(snapshot)); setSyncStatus('Sincronizado ✓');
+  }
+  async function finishLogin(user){
+    currentUser=user; setSyncStatus('Cargando…');
+    const {data,error}=await supabaseClient.from('app_data').select('data').eq('user_id',user.id).maybeSingle();
+    if(error) throw error;
+    if(data && data.data){ db=data.data; }
+    else { db=JSON.parse(localStorage.getItem(KEY) || '{"clientas":[],"fotos":{}}'); }
+    db.clientas=db.clientas||[]; db.fotos=db.fotos||{}; db.tratamientos=db.tratamientos||[]; db.inventario=db.inventario||[]; db.movimientos=db.movimientos||[]; db.citas=db.citas||[];
+    await migrateOldImages();
+    if(!data) await persistNow();
+    document.body.classList.remove('locked');
+    renderLogo(); renderGallery(); renderResults(); renderTreatments(); renderInventory(); clearAppointmentForm(); renderAppointments(); clearMovementForm(); renderFinance();
+    setSyncStatus('Sincronizado ✓');
+  }
+  document.getElementById('loginForm').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=document.getElementById('loginMsg'); msg.textContent='Ingresando…';
+    const {data,error}=await supabaseClient.auth.signInWithPassword({email:document.getElementById('loginEmail').value.trim(),password:document.getElementById('loginPassword').value});
+    if(error){msg.textContent='No se pudo ingresar. Revisá el correo y la contraseña.';return;}
+    try{await finishLogin(data.user);}catch(err){console.error(err);msg.textContent='Error al cargar los datos. Revisá la conexión y volvé a intentar.';}
+  });
+  document.getElementById('logoutBtn').onclick=async()=>{await supabaseClient.auth.signOut();currentUser=null;document.body.classList.add('locked');};
+
 
   // ---------- Navegación ----------
   const side = document.getElementById("side");
@@ -308,8 +382,8 @@
       const src = db.fotos[i];
       if (src) {
         const img = document.createElement("img");
-        img.src = src;
         img.alt = "Foto de BY DELFI GRAMAJO";
+        imageSource(src).then(url=>{if(url) img.src=url;});
         div.appendChild(img);
       }
       const input = document.createElement("input");
@@ -318,16 +392,13 @@
       input.onchange = () => {
         const f = input.files && input.files[0];
         if (!f) return;
-        const r = new FileReader();
-        r.onload = e => { db.fotos[i] = e.target.result; save(); renderGallery(); };
-        r.readAsDataURL(f);
+        uploadImage(f,`galeria-${i}`).then(path=>{db.fotos[i]=path;save();renderGallery();}).catch(err=>{alert('No se pudo subir la foto. Revisá tu conexión.');console.error(err);});
       };
       div.appendChild(input);
       g.appendChild(div);
     });
   }
-
-  // ---------- Clientas ----------
+   // ---------- Clientas ----------
   const search = document.getElementById("search");
   search.oninput = renderResults;
 
@@ -549,9 +620,7 @@
     document.getElementById("iMsg").textContent = "✓ Guardado";
   };
   document.getElementById("cancelInventory").onclick = clearInventoryForm;
-
-
-  // ---------- Finanzas ----------
+   // ---------- Finanzas ----------
   const money = n => "$ " + Number(n || 0).toLocaleString("es-AR", {minimumFractionDigits: 0, maximumFractionDigits: 2});
   function clearMovementForm() {
     ["fTipo", "fFecha", "fImporte", "fConcepto", "fCategoria", "fMedio"].forEach(id => {
@@ -711,7 +780,7 @@
     const placeholder = document.getElementById("homeLogoPlaceholder");
     img.style.display = homeImg.style.display = db.logo ? "" : "none";
     placeholder.style.display = db.logo ? "none" : "";
-    if (db.logo) { img.src = db.logo; homeImg.src = db.logo; }
+    if (db.logo) { imageSource(db.logo).then(url=>{if(url){img.src=url;homeImg.src=url;}}); }
     updateManifest();
   }
 
@@ -735,20 +804,13 @@
 
   document.getElementById("homeLogoInput").onchange = function () {
     const f = this.files && this.files[0]; if (!f) return;
-    const r = new FileReader();
-    r.onload = e => { db.logo = e.target.result; save(); renderLogo(); this.value = ""; };
-    r.readAsDataURL(f);
+    uploadImage(f,'logo').then(path=>{db.logo=path;save();renderLogo();this.value="";}).catch(err=>{alert('No se pudo subir el logo. Revisá tu conexión.');console.error(err);});
   };
 
-  renderLogo();
-  renderGallery();
-  renderResults();
-  renderTreatments();
-  renderInventory();
-  clearAppointmentForm();
-  renderAppointments();
-  clearMovementForm();
-  renderFinance();
+  supabaseClient.auth.getSession().then(async ({data,error})=>{
+    if(error) return;
+    if(data.session){ try{await finishLogin(data.session.user);}catch(err){console.error(err);document.getElementById('loginMsg').textContent='No se pudieron cargar los datos. Cerrá sesión y volvé a ingresar.';} }
+  });
 </script>
 </body>
 </html>
