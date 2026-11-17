@@ -801,7 +801,9 @@
       actions.append(edit,del);row.append(info,actions);box.appendChild(row);
     });
   }
-      if(!fecha||!hora||!clienta){alert("Completá fecha, hora y nombre de la clienta.");return;}
+       document.getElementById("saveAppointment").onclick=async()=>{
+    const fecha=document.getElementById("aFecha").value,hora=document.getElementById("aHora").value,clienta=document.getElementById("aClienta").value.trim(); 
+  if(!fecha||!hora||!clienta){alert("Completá fecha, hora y nombre de la clienta.");return;}
     const end=new Date(new Date(calendarIso(fecha,hora)).getTime()+60*60*1000);
     const params={
       titulo:clienta+(document.getElementById("aTratamiento").value.trim()?" — "+document.getElementById("aTratamiento").value.trim():""),
